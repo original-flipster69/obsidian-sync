@@ -20,7 +20,6 @@ export interface OvhSyncSettings {
   autoSyncInterval: number;
   debounceDelay: number;
   excludePatterns: string;
-  // Legacy fields for migration — cleared after migration
   accessKey?: string;
   secretKey?: string;
 }
@@ -63,7 +62,6 @@ export class OvhSyncSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h2", { text: "OVH Cloud Sync Settings" });
 
-    // Connection section
     containerEl.createEl("h3", { text: "Connection" });
 
     new Setting(containerEl)
@@ -171,7 +169,6 @@ export class OvhSyncSettingTab extends PluginSettingTab {
         })
       );
 
-    // Sync section
     containerEl.createEl("h3", { text: "Sync" });
 
     new Setting(containerEl)

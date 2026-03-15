@@ -77,8 +77,6 @@ export class SyncEngine {
 
       let actions = computeSyncActions(localFiles, remoteFiles, metadata);
 
-      // First sync: download only — never delete or upload over remote files.
-      // This prevents an empty vault on a new device from wiping the remote.
       if (isFirstSync) {
         actions = actions.filter((a) => {
           if (a.type === "deleteRemote" || a.type === "deleteLocal") {
@@ -87,7 +85,6 @@ export class SyncEngine {
           }
           return true;
         });
-        // For conflicts on first sync, always prefer downloading remote
         actions = actions.map((a) => {
           if (a.type === "conflict") {
             return { ...a, resolution: "download" as const };
@@ -96,9 +93,6 @@ export class SyncEngine {
         });
       }
 
-      // Mass-deletion guard: if more than 50% of tracked files would be
-      // deleted in either direction, skip all deletes. This protects against
-      // accidental wipes from stale metadata or empty vaults.
       if (!isFirstSync) {
         const trackedCount = Object.keys(metadata.files).length;
         const deleteRemoteCount = actions.filter((a) => a.type === "deleteRemote").length;
@@ -134,7 +128,6 @@ export class SyncEngine {
         }
       }
 
-      // Execute sync actions
       for (const action of actions) {
         try {
           await this.executeAction(action, metadata);
@@ -168,7 +161,6 @@ export class SyncEngine {
         }
       }
 
-      // Clean up tracked entries for files that no longer exist anywhere
       const localPaths = new Set(localFiles.map((f) => f.path));
       const remotePaths = new Set(remoteFiles.map((f) => f.path));
       for (const path of Object.keys(metadata.files)) {
@@ -240,14 +232,12 @@ export class SyncEngine {
 
       let mtime = obj.lastModified.getTime();
 
-      // Try to get the mtime from metadata for more accurate timestamps
       try {
         const head = await this.s3.headObject(obj.key);
         if (head?.metadata?.mtime) {
           mtime = parseInt(head.metadata.mtime, 10);
         }
       } catch {
-        // Fall back to S3 LastModified
       }
 
       remoteFiles.push({
@@ -322,7 +312,6 @@ export class SyncEngine {
     if (existingFile instanceof TFile) {
       await this.vault.modifyBinary(existingFile, data);
     } else {
-      // Ensure parent directory exists
       const dir = path.substring(0, path.lastIndexOf("/"));
       if (dir) {
         await this.ensureDir(dir);

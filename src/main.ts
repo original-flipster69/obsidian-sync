@@ -25,7 +25,6 @@ export default class OvhCloudSync extends Plugin {
   private pendingChanges = new Set<string>();
   private processingChanges = false;
   private debouncedProcessChanges!: () => void;
-  // Track files we're currently downloading to avoid re-uploading them
   private downloadingPaths = new Set<string>();
 
   async onload(): Promise<void> {
@@ -48,12 +47,10 @@ export default class OvhCloudSync extends Plugin {
       this.statusBar.setDisconnected();
     }
 
-    // Ribbon icon for manual sync
     this.addRibbonIcon("refresh-cw", "Sync with OVH Cloud", async () => {
       await this.runFullSync();
     });
 
-    // Command palette
     this.addCommand({
       id: "full-sync",
       name: "Run full sync",
@@ -66,17 +63,14 @@ export default class OvhCloudSync extends Plugin {
       callback: () => this.forceUploadAll(),
     });
 
-    // Settings tab
     this.addSettingTab(new OvhSyncSettingTab(this.app, this));
 
-    // Debounced change processor
     this.debouncedProcessChanges = debounce(
       () => this.processChanges(),
       this.settings.debounceDelay,
       true
     );
 
-    // File watchers for on-change sync
     this.registerEvent(
       this.app.vault.on("modify", (file) => this.onFileChange(file))
     );
@@ -92,7 +86,6 @@ export default class OvhCloudSync extends Plugin {
       )
     );
 
-    // Start auto-sync timer
     this.setupAutoSync();
   }
 
@@ -107,9 +100,6 @@ export default class OvhCloudSync extends Plugin {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, data?.settings);
     this.syncMetadata = data?.syncMetadata || emptyMetadata();
 
-    // Fix stale metadata: if lastFullSync is set but no files are tracked,
-    // a previous broken sync marked completion without uploading anything.
-    // Reset so the next sync is treated as a proper first sync.
     if (
       this.syncMetadata.lastFullSync > 0 &&
       Object.keys(this.syncMetadata.files).length === 0
@@ -117,7 +107,6 @@ export default class OvhCloudSync extends Plugin {
       this.syncMetadata = emptyMetadata();
     }
 
-    // Migrate legacy plaintext credentials to SecretStorage
     await this.migrateLegacyCredentials();
   }
 
@@ -152,7 +141,6 @@ export default class OvhCloudSync extends Plugin {
       syncMetadata: this.syncMetadata,
     } as PluginData);
 
-    // Update engine with new settings
     if (this.syncEngine) {
       this.syncEngine.updateS3Client(this.createS3Client());
       this.syncEngine.updateExcludePatterns(this.getExcludePatterns());
@@ -243,7 +231,6 @@ export default class OvhCloudSync extends Plugin {
     if (!this.hasCompletedFirstSync()) return;
     if (this.isExcluded(file.path)) return;
 
-    // If the file was tracked, delete it remotely
     if (this.syncMetadata.files[file.path]) {
       this.syncEngine.deleteRemoteFile(file.path).catch((e) => {
         console.error(`OVH Sync: failed to delete remote ${file.path}`, e);
@@ -256,14 +243,12 @@ export default class OvhCloudSync extends Plugin {
     if (!this.isConfigured()) return;
     if (!this.hasCompletedFirstSync()) return;
 
-    // Delete old path remotely if tracked
     if (this.syncMetadata.files[oldPath]) {
       this.syncEngine.deleteRemoteFile(oldPath).catch((e) => {
         console.error(`OVH Sync: failed to delete remote ${oldPath}`, e);
       });
     }
 
-    // Upload to new path
     if (!this.isExcluded(file.path)) {
       this.pendingChanges.add(file.path);
       this.debouncedProcessChanges();
@@ -292,7 +277,6 @@ export default class OvhCloudSync extends Plugin {
     this.statusBar.setResult(paths.length - errors, 0, errors);
     this.processingChanges = false;
 
-    // Process any changes that came in while we were syncing
     if (this.pendingChanges.size > 0) {
       this.debouncedProcessChanges();
     }
@@ -314,13 +298,9 @@ export default class OvhCloudSync extends Plugin {
 
     const result = await this.syncEngine.fullSync();
 
-    // Mark downloaded files so the on-change handler doesn't re-upload them.
-    // Events may fire asynchronously after the sync finishes, so keep the
-    // guard for a short window.
     for (const path of result.downloadedPaths) {
       this.downloadingPaths.add(path);
     }
-    // Discard any change events that queued during the sync
     this.pendingChanges.clear();
     if (result.downloadedPaths.length > 0) {
       setTimeout(() => {

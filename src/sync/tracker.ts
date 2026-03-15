@@ -61,7 +61,6 @@ export function computeSyncActions(
       const remoteChanged = remote.etag !== prev.etag;
 
       if (localChanged && remoteChanged) {
-        // Conflict — last-write-wins
         actions.push({
           type: "conflict",
           path,
@@ -73,26 +72,20 @@ export function computeSyncActions(
         actions.push({ type: "download", path });
       }
     } else if (local && remote && !prev) {
-      // File exists both sides but never tracked — conflict
       actions.push({
         type: "conflict",
         path,
         resolution: local.mtime >= remote.mtime ? "upload" : "download",
       });
     } else if (local && !remote && !prev) {
-      // New local file, never seen remotely
       actions.push({ type: "upload", path });
     } else if (!local && remote && !prev) {
-      // New remote file, never seen locally
       actions.push({ type: "download", path });
     } else if (local && !remote && prev) {
-      // Was tracked, now gone remotely → deleted remotely → delete local
       actions.push({ type: "deleteLocal", path });
     } else if (!local && remote && prev) {
-      // Was tracked, now gone locally → deleted locally → delete remote
       actions.push({ type: "deleteRemote", path });
     }
-    // !local && !remote && prev → deleted everywhere, just clean up tracked
   }
 
   return actions;

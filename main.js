@@ -17391,7 +17391,6 @@ var OvhCloudSync = class extends import_obsidian4.Plugin {
     this.autoSyncTimer = null;
     this.pendingChanges = /* @__PURE__ */ new Set();
     this.processingChanges = false;
-    // Track files we're currently downloading to avoid re-uploading them
     this.downloadingPaths = /* @__PURE__ */ new Set();
   }
   async onload() {

@@ -108,18 +108,15 @@ export class S3Client {
     const body = result.Body;
     if (!body) throw new Error(`Empty response for ${key}`);
 
-    // SDK wraps our Blob response with transformToByteArray helper
     if ("transformToByteArray" in body && typeof body.transformToByteArray === "function") {
       const bytes = await body.transformToByteArray();
       return bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
     }
 
-    // Fallback: raw Blob
     if (body instanceof Blob) {
       return await body.arrayBuffer();
     }
 
-    // Fallback: raw Uint8Array
     if (body instanceof Uint8Array) {
       return body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer;
     }

@@ -1,7 +1,6 @@
 import { requestUrl } from "obsidian";
 import type { HttpHandlerOptions } from "@smithy/types";
 
-// Use inline types to avoid version mismatches with @smithy/protocol-http
 interface HttpRequest {
   method: string;
   protocol: string;
@@ -19,10 +18,6 @@ interface HttpResponse {
   body: unknown;
 }
 
-/**
- * Custom HTTP handler that uses Obsidian's requestUrl() instead of fetch().
- * This bypasses CORS restrictions and works on both desktop and mobile.
- */
 export class ObsidianHttpHandler {
   async handle(
     request: HttpRequest,
@@ -33,9 +28,6 @@ export class ObsidianHttpHandler {
     const headers: Record<string, string> = {};
     for (const [key, value] of Object.entries(request.headers)) {
       const lower = key.toLowerCase();
-      // host is derived from the URL; content-length is set by requestUrl
-      // from the body — passing it explicitly can conflict with Electron's
-      // net module and cause ERR_ILLEGAL_ARGUMENT.
       if (lower === "host" || lower === "content-length") continue;
       headers[key] = String(value);
     }
@@ -43,8 +35,6 @@ export class ObsidianHttpHandler {
     let body: string | ArrayBuffer | undefined;
     if (request.body) {
       if (request.body instanceof Uint8Array) {
-        // Create a clean ArrayBuffer copy — passing .buffer.slice() can
-        // produce detached or shared buffers that Electron rejects.
         const copy = new ArrayBuffer(request.body.byteLength);
         new Uint8Array(copy).set(request.body);
         body = copy;
@@ -68,9 +58,6 @@ export class ObsidianHttpHandler {
       responseHeaders[key.toLowerCase()] = typeof value === "string" ? value : String(value);
     }
 
-    // Wrap in a ReadableStream so the AWS SDK's collectBody/sdStream
-    // deserialization works on both desktop and mobile.  Blob works on
-    // desktop but mobile Obsidian's runtime rejects it ("unsupported type").
     const bytes = new Uint8Array(response.arrayBuffer);
     const responseBody = new ReadableStream({
       start(controller) {

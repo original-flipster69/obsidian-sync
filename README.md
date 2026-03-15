@@ -1,4 +1,4 @@
-# OVH Cloud Sync for Obsidian
+# obsidian cloud sync 💎🌨️
 
 ![GitHub License](https://img.shields.io/github/license/original-flipster69/obsidian-sync)
 ![GitHub Release](https://img.shields.io/github/v/release/original-flipster69/obsidian-sync)

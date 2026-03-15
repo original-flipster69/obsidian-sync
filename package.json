@@ -1,0 +1,29 @@
+{
+  "name": "obsidian-ovh-sync",
+  "version": "1.0.0",
+  "description": "Bidirectional sync for Obsidian vaults with OVH Cloud Object Storage",
+  "main": "main.js",
+  "scripts": {
+    "dev": "node esbuild.config.mjs",
+    "build": "tsc -noEmit -skipLibCheck && node esbuild.config.mjs production"
+  },
+  "keywords": [
+    "obsidian",
+    "sync",
+    "ovh",
+    "s3",
+    "cloud"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "esbuild": "^0.24.0",
+    "obsidian": "^1.7.2",
+    "typescript": "^5.6.0"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1000.0",
+    "@smithy/types": "^4.13.0"
+  }
+}

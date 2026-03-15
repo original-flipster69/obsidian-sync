@@ -1,0 +1,9 @@
+{
+  "id": "ovh-cloud-sync",
+  "name": "OVH Cloud Sync",
+  "version": "1.0.0",
+  "minAppVersion": "1.11.4",
+  "description": "Bidirectional sync for Obsidian vaults with OVH Cloud Object Storage (S3-compatible).",
+  "author": "flipster",
+  "isDesktopOnly": false
+}

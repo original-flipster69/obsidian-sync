@@ -1,0 +1,19 @@
+.ovh-sync-status {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ovh-sync-status .sync-icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ovh-sync-status .sync-icon.syncing {
+  animation: ovh-sync-spin 1s linear infinite;
+}
+
+@keyframes ovh-sync-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

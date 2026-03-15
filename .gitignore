@@ -4,5 +4,6 @@
 lifecycle.json
 
 node_modules/
+main.js
 
 TASKS.md

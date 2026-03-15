@@ -9,7 +9,7 @@ import {
   FileRecord,
 } from "./tracker";
 
-const MAX_DELETE_FRACTION = 0.5;
+const MAX_DELETE_FRACTION = 0.9;
 const MIN_DELETE_THRESHOLD = 5;
 
 export interface SyncResult {
